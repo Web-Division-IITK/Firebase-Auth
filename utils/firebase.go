@@ -2,13 +2,14 @@ package utils
 
 import (
 	"context"
+	"log"
+	"os"
+
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
 	"firebase.google.com/go/db"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
-	"log"
-	"os"
 )
 
 var (
@@ -22,7 +23,7 @@ func InitFirebase() {
 		log.Fatalf("Error loading .env file: %v\n", err)
 	}
 
-	opt := option.WithCredentialsFile("notification-22d59-firebase-adminsdk-wwfab-12d295b4ca.json")
+	opt := option.WithCredentialsFile("firebase.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("Error initializing Firebase app: %v\n", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/smtp"
+	"net/url"
 	"os"
 
 	"firebase.google.com/go/auth"
@@ -47,7 +48,7 @@ func SendEmail(to, subject, body string) error {
 func SendVerificationEmail(user *auth.UserRecord) error {
 	// Generate email verification link with settings
 	settings := &auth.ActionCodeSettings{
-		URL:             "https://notification-22d59.firebaseapp.com/",
+		URL:             fmt.Sprintf("https://%s.firebaseapp.com/", os.Getenv("FIREBASE_PROJECT_ID")),
 		HandleCodeInApp: true,
 	}
 	// Send email with the verification link
@@ -55,13 +56,11 @@ func SendVerificationEmail(user *auth.UserRecord) error {
 	if err != nil {
 		return fmt.Errorf("error generating email verification link: %v", err)
 	}
-
 	// Log the verification link
 	fmt.Printf("Verification link for user %s: %s\n", user.Email, link)
 
 	// Construct the email body with the link
-	body := "Please click on the following link to verify your email address:\n" + link
-
+	body := fmt.Sprintf("%s\n%s", "Please click the following link to verify.", url.QueryEscape(link))
 	// Replace recipientEmail with the actual email address of the user
 	recipientEmail := user.Email
 
