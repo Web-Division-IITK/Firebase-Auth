@@ -31,8 +31,23 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate custom token
-	token, err := utils.FirebaseAuth.CustomToken(context.Background(), u.UID)
+	// Retrieve user's role from Firebase Database
+	var role string
+	err = utils.FirebaseDB.NewRef("users/"+u.UID+"/role").Get(context.Background(), &role)
+	if err != nil || role == "" {
+		http.Error(w, "Failed to retrieve user role", http.StatusInternalServerError)
+		log.Printf("Failed to retrieve user role: %v\n", err)
+		return
+	}
+
+	// Set custom claims including role from the request body
+	claims := map[string]interface{}{
+		"role":    role,
+		"user_id": user.Email, // Using email as the user_id
+	}
+
+	// Generate custom token with claims
+	token, err := utils.FirebaseAuth.CustomTokenWithClaims(context.Background(), user.Email, claims)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		log.Printf("Failed to create custom token: %v\n", err)
@@ -46,6 +61,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"token":   token,
 		"expires": expirationTime,
+		"role":    role,
+		"user_id": user.Email,
 	}
 
 	// Return the token in the response
