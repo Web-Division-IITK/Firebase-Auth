@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +31,28 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Successful login
+	// Generate custom token
+	token, err := utils.FirebaseAuth.CustomToken(context.Background(), u.UID)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		log.Printf("Failed to create custom token: %v\n", err)
+		return
+	}
+
+	// Set token expiration time (e.g., 1 hour)
+	expirationTime := time.Now().Add(time.Hour).Unix()
+
+	// Create the response payload
+	response := map[string]interface{}{
+		"token":   token,
+		"expires": expirationTime,
+	}
+
+	// Return the token in the response
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("User logged in successfully"))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		log.Printf("Failed to encode response: %v\n", err)
+	}
 }
