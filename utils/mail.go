@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/smtp"
-	"net/url"
 	"os"
 
 	"firebase.google.com/go/auth"
@@ -25,8 +24,7 @@ func SendEmail(to, subject, body string) error {
 	headers["To"] = to
 	headers["Subject"] = subject
 	headers["MIME-Version"] = "1.0"
-	headers["Content-Type"] = "text/plain; charset=\"utf-8\""
-	headers["Content-Transfer-Encoding"] = "quoted-printable"
+	headers["Content-Type"] = "text/html; charset=\"utf-8\""
 
 	// Compose the email message
 	var msg string
@@ -60,7 +58,7 @@ func SendVerificationEmail(user *auth.UserRecord) error {
 	fmt.Printf("Verification link for user %s: %s\n", user.Email, link)
 
 	// Construct the email body with the link
-	body := fmt.Sprintf("%s\n%s", "Please click the following link to verify.", url.QueryEscape(link))
+	body := fmt.Sprintf("<p>Please click the following link to verify your email address:</p><p><a href=\"%s\">Verify Email</a></p>", link)
 	// Replace recipientEmail with the actual email address of the user
 	recipientEmail := user.Email
 
