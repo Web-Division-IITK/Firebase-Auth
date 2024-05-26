@@ -72,3 +72,25 @@ func SendVerificationEmail(user *auth.UserRecord) error {
 
 	return nil
 }
+
+func SendPasswordResetEmail(email string) error {
+	// Generate password reset link
+	link, err := FirebaseAuth.PasswordResetLinkWithSettings(context.Background(), email, nil)
+	if err != nil {
+		return fmt.Errorf("error generating password reset link: %v", err)
+	}
+	// Log the password reset link
+	fmt.Printf("Password reset link for user %s: %s\n", email, link)
+
+	// Construct the email body with the link
+	body := fmt.Sprintf("<p>Please click the following link to reset your password:</p><p><a href=\"%s\">Reset Password</a></p>", link)
+	// Call the sendEmail function to send the email
+	err = SendEmail(email, "Reset your password", body)
+	if err != nil {
+		return fmt.Errorf("error sending password reset email: %v", err)
+	}
+
+	fmt.Println("Password reset email sent successfully")
+
+	return nil
+}
