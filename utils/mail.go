@@ -94,3 +94,35 @@ func SendPasswordResetEmail(email string) error {
 
 	return nil
 }
+
+func ResendVerificationEmail(email string) error {
+	_, err := FirebaseAuth.GetUserByEmail(context.Background(), email)
+	if err != nil {
+		return fmt.Errorf("error fetching user data: %v", err)
+	}
+
+	// Generate email verification link with settings
+	settings := &auth.ActionCodeSettings{
+		URL:             fmt.Sprintf("https://%s.firebaseapp.com/", os.Getenv("FIREBASE_PROJECT_ID")),
+		HandleCodeInApp: true,
+	}
+	link, err := FirebaseAuth.EmailVerificationLinkWithSettings(context.Background(), email, settings)
+	if err != nil {
+		return fmt.Errorf("error generating email verification link: %v", err)
+	}
+	// Log the verification link
+	fmt.Printf("Verification link for user %s: %s\n", email, link)
+
+	// Construct the email body with the link
+	body := fmt.Sprintf("<p>Please click the following link to verify your email address:</p><p><a href=\"%s\">Verify Email</a></p>", link)
+
+	// Call the sendEmail function to send the email
+	err = SendEmail(email, "Verify your email address", body)
+	if err != nil {
+		return fmt.Errorf("error sending verification email: %v", err)
+	}
+
+	fmt.Println("Verification email sent successfully")
+
+	return nil
+}
